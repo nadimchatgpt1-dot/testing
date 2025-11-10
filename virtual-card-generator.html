@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Virtual Card Generator</title>
+  <!-- TailwindCSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- html2canvas CDN for PNG export -->
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+  <style>
+    body { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+  </style>
+</head>
+<body class="min-h-screen bg-slate-50 flex items-center justify-center p-6">
+  <div class="max-w-6xl w-full grid grid-cols-1 md:grid-cols-2 gap-8">
+    <!-- Controls -->
+    <div class="p-6 bg-white rounded-2xl shadow-md">
+      <h2 class="text-2xl font-semibold mb-1">Virtual Card Creator</h2>
+      <p class="text-sm text-slate-500 mb-6">Fill the form to design your virtual card. Preview updates live.</p>
+
+      <div class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium mb-1">Cardholder Name</label>
+          <input id="name" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-400" placeholder="Your Name" maxlength="26" value="Your Name" />
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium mb-1">Card Number</label>
+          <input id="number" class="w-full px-4 py-2 border rounded-lg font-mono text-lg focus:outline-none focus:ring-2 focus:ring-indigo-400" placeholder="1234 5678 9012 3456" value="1234 5678 9012 3456" />
+        </div>
+
+        <div class="grid grid-cols-3 gap-3">
+          <div>
+            <label class="block text-sm font-medium mb-1">Expiry</label>
+            <input id="expiry" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-400" placeholder="MM/YY" value="12/34" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium mb-1">CVV</label>
+            <input id="cvv" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-400" placeholder="123" value="123" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium mb-1">Template</label>
+            <select id="theme" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-400">
+              <option value="Vibrant" selected>Vibrant</option>
+              <option value="Midnight">Midnight</option>
+              <option value="Glass">Glass</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="flex gap-3 mt-4">
+          <button id="sampleBtn" class="px-4 py-2 rounded-lg border bg-slate-50 hover:bg-slate-100">Sample</button>
+          <button id="downloadBtn" class="ml-auto inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg shadow hover:bg-indigo-700">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Export PNG
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Preview -->
+    <div class="p-6">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-lg font-medium">Preview</h3>
+        <span class="text-sm text-slate-500">Live preview — responsive & printable</span>
+      </div>
+
+      <div class="flex flex-col items-center gap-6">
+        <div id="card" class="w-[360px] h-[220px] rounded-2xl p-6 relative overflow-hidden transform-gpu shadow-2xl text-white bg-gradient-to-br from-indigo-500 to-pink-500">
+          <!-- top row: accent + CVV + label (only one VIRTUAL) -->
+          <div class="flex justify-between items-start">
+            <div class="flex items-center gap-3">
+              <div id="accent" class="w-8 h-8 rounded-full opacity-70 bg-white/20"></div>
+            </div>
+
+            <div class="flex items-center gap-3">
+              <div id="cardCvv" class="px-2 py-1 rounded-md text-xs font-medium">CVV: 123</div>
+              <div class="text-sm opacity-90">VIRTUAL</div>
+            </div>
+          </div>
+
+          <!-- number -->
+          <div class="mt-8">
+            <div id="cardNumber" class="text-xl tracking-widest font-mono">1234 5678 9012 3456</div>
+          </div>
+
+          <!-- bottom row -->
+          <div class="absolute bottom-6 left-6 right-6 flex items-center justify-between">
+            <div>
+              <div class="text-xs uppercase opacity-80">Cardholder</div>
+              <div id="cardName" class="font-semibold">Your Name</div>
+            </div>
+            <div class="text-right">
+              <div class="text-xs uppercase opacity-80">Valid Thru</div>
+              <div id="cardExpiry" class="font-semibold">12/34</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="w-[360px] bg-white rounded-xl p-4 shadow">
+          <div class="flex items-center gap-4">
+            <div class="flex-1">
+              <div class="text-sm text-slate-500">Card Details</div>
+              <div id="detailNumber" class="font-mono mt-1">1234 5678 9012 3456</div>
+            </div>
+            <div class="text-right">
+              <div class="text-sm text-slate-500">CVV</div>
+              <div id="detailCvv" class="font-semibold">123</div>
+            </div>
+          </div>
+          <div class="mt-3 grid grid-cols-3 gap-3 text-sm text-slate-600">
+            <div class="col-span-2">Template: <span id="detailTheme">Vibrant</span></div>
+            <div class="text-right">Preview: Digital</div>
+          </div>
+        </div>
+        <div class="text-xs text-slate-500">Design/demo only — never use real card data.</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // helpers
+    function formatNumber(val) {
+      return val.replace(/[^0-9]/g, '').slice(0,16).replace(/(\d{4})/g, '$1 ').trim();
+    }
+
+    const themes = {
+      Vibrant: {
+        card: 'text-white bg-gradient-to-br from-indigo-500 to-pink-500',
+        accentOpacity: 'opacity-70',
+        text: 'text-white',
+        chipCvvBg: 'bg-white/20 text-white',
+      },
+      Midnight: {
+        card: 'text-white bg-gradient-to-br from-slate-800 to-slate-600',
+        accentOpacity: 'opacity-60',
+        text: 'text-white',
+        chipCvvBg: 'bg-white/20 text-white',
+      },
+      Glass: {
+        card: 'text-slate-900 bg-white/30 backdrop-blur-sm',
+        accentOpacity: 'opacity-40',
+        text: 'text-slate-900',
+        chipCvvBg: 'bg-white/40 text-slate-900',
+      },
+    };
+
+    // elements
+    const nameEl = document.getElementById('name');
+    const numberEl = document.getElementById('number');
+    const expiryEl = document.getElementById('expiry');
+    const cvvEl = document.getElementById('cvv');
+    const themeEl = document.getElementById('theme');
+
+    const card = document.getElementById('card');
+    const accent = document.getElementById('accent');
+    const cardNumber = document.getElementById('cardNumber');
+    const cardName = document.getElementById('cardName');
+    const cardExpiry = document.getElementById('cardExpiry');
+    const detailNumber = document.getElementById('detailNumber');
+    const detailCvv = document.getElementById('detailCvv');
+    const detailTheme = document.getElementById('detailTheme');
+    const cardCvv = document.getElementById('cardCvv');
+
+    // bindings
+    nameEl.addEventListener('input', () => {
+      cardName.textContent = nameEl.value || 'Your Name';
+    });
+
+    numberEl.addEventListener('input', () => {
+      numberEl.value = formatNumber(numberEl.value);
+      cardNumber.textContent = numberEl.value || '#### #### #### ####';
+      detailNumber.textContent = numberEl.value || '';
+    });
+
+    expiryEl.addEventListener('input', () => {
+      let v = expiryEl.value.replace(/[^0-9]/g, '').slice(0,4);
+      if (v.length > 2) v = v.slice(0,2) + '/' + v.slice(2);
+      expiryEl.value = v;
+      cardExpiry.textContent = v || 'MM/YY';
+    });
+
+    cvvEl.addEventListener('input', () => {
+      cvvEl.value = cvvEl.value.replace(/[^0-9]/g, '').slice(0,4);
+      detailCvv.textContent = cvvEl.value || '';
+      // live update CVV on card
+      cardCvv.textContent = cvvEl.value ? ('CVV: ' + cvvEl.value) : 'CVV: ---';
+    });
+
+    themeEl.addEventListener('change', () => applyTheme());
+
+    function applyTheme(){
+      const t = themes[themeEl.value] || themes.Vibrant;
+      card.className = 'w-[360px] h-[220px] rounded-2xl p-6 relative overflow-hidden transform-gpu shadow-2xl ' + t.card;
+      accent.className = 'w-8 h-8 rounded-full ' + t.accentOpacity + ' bg-white/20';
+      detailTheme.textContent = themeEl.value;
+      cardCvv.className = 'px-2 py-1 rounded-md text-xs font-medium ' + (t.chipCvvBg || 'bg-white/20 text-white');
+    }
+
+    applyTheme(); // initial
+
+    // sample
+    document.getElementById('sampleBtn').addEventListener('click', () => {
+      nameEl.value = 'John Doe';
+      numberEl.value = '4444 3333 2222 1111';
+      expiryEl.value = '12/34';
+      cvvEl.value = '123';
+      themeEl.value = 'Midnight';
+      nameEl.dispatchEvent(new Event('input'));
+      numberEl.dispatchEvent(new Event('input'));
+      expiryEl.dispatchEvent(new Event('input'));
+      cvvEl.dispatchEvent(new Event('input'));
+      applyTheme();
+    });
+
+    // download
+    document.getElementById('downloadBtn').addEventListener('click', async () => {
+      try {
+        const canvas = await html2canvas(card, { scale: 2 });
+        const dataUrl = canvas.toDataURL('image/png');
+        const link = document.createElement('a');
+        const safeName = (nameEl.value || 'virtual-card').replace(/\s+/g,'-').toLowerCase();
+        link.download = `virtual-card-${safeName}.png`;
+        link.href = dataUrl;
+        link.click();
+      } catch (e){
+        alert('Export failed.');
+        console.error(e);
+      }
+    });
+  </script>
+</body>
+</html>
